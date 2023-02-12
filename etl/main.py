@@ -1,59 +1,6 @@
-#
-################################################ Connect FastApi with database ########################################################################
-#from fastapi import FastAPI
-#from fastapi.responses import JSONResponse
-#from pydantic import BaseModel
 #from sqlalchemy.orm import sessionmaker
-#
-##app = FastAPI()
-##
-### Connect to the database
-##engine = create_engine("sqlite:///items.db")
-##SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-##
-##
-from sqlalchemy import create_engine, Column, Integer, String,text, Table, MetaData
-##from sqlalchemy.ext.declarative import declarative_base
-##
-##Base = declarative_base()
-### Define the database model
-##class Item(Base):
-##    __tablename__ = "items"
-##    id = Column(Integer, primary_key=True, index=True)
-##    name = Column(String, unique=True, index=True)
-##
-##@app.get("/")
-##def read_items():
-##    # Get a database session
-##    session = SessionLocal()
-##    # Query database
-##    items = session.query(Item).all()
-##    
-##    # Convert the results to a list of dictionaries
-##    items_list = [{"id": item.id, "name": item.name} for item in items]
-##    return items_list
-#
-#
-#
-#from fastapi import FastAPI
-#from fastapi import HTTPException
-#from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
-#from sqlalchemy.ext.declarative import declarative_base
-#from sqlalchemy import Column, Integer, String
-#
-#app = FastAPI()
-#Base = declarative_base()
-#
-#class Item(Base):
-#    __tablename__ = "items"
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String)
-#
-#engine = create_engine("sqlite:///items.db")
-#Session = sessionmaker(bind=engine)
-#
+
 ##@app.get("/items/{item_id}")
 ##def read_item(item_id: int, skip: int = 0, limit: int = 100):
 ##    session = Session()
@@ -62,59 +9,13 @@ from sqlalchemy.orm import Session
 ##    #    raise HTTPException(status_code=404, detail="Item not found")
 ##    return item
 #
-#
-#engine = create_engine("sqlite:///items.db")
-#SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-#def read_items():
-#    # Get a database session
-#    session = SessionLocal()
-#    # Query database
-#    items = session.query(Item).all()
-#    
-#    # Convert the results to a list of dictionaries
-#    items_list = [{"id": item.id, "name": item.name} for item in items]
-#    return items_list
+
 
 
 from fastapi import FastAPI, Header,Depends
-from models import get_db, engine, get_data, delete_data, get_duplicate_data, update_data
+from models import get_db, get_data, delete_data, get_duplicate_data, update_data
 
 app = FastAPI()
-
-
-#@app.get("/delete/")
-#def read_items():
-#    delete_data()
-#
-#@app.get("/items/{item_id}")
-#def read_item(item_id: int, skip: int = 0, limit: int = 100):
-#    items= get_data()
-#    #item = items.filter(Item.id == item_id).first()
-#    #if item is None:
-#    #    raise HTTPException(status_code=404, detail="Item not found")
-#    return items
-#
-#engine = create_engine('sqlite:///db.sqlite3', pool_size=5, max_overflow=0)
-#SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-
-#@app.delete("/items/{item_id}")
-#def delete_data(id: int):
-#    db = SessionLocal()
-#    result = db.execute(text("delete FROM items"))
-#    #items = [{"id": row[0], "name": row[1]} for row in result]
-#    
-#    db.expire_all()
-#    db.close()
-#    #return items
-#    #session.query(items).filter(items.id == id).delete()
-#    #session.commit()
-#    #session.close()
-
-
-#db = SessionLocal()
-
 
 #def get_operation():
 #    try:
@@ -130,58 +31,73 @@ app = FastAPI()
 #    finally:
 #        db.close()
 #
-
+from credentials import api_key_secret
 
 @app.get("/")
 def read_root(api_key: str = Header(None)):
-    if api_key != "secret_key":
+    if api_key != api_key_secret:
         return {"message": "Invalid API Key"}
     return {"Hello": "World"}
 
 @app.get("/items")
-def read_items(db: Session = Depends(get_db)):
-    db.begin_nested()
-    # perform your database operations here
- 
-    db.expire_all()
-    items= {"items": get_data(db)}
-    db.commit()
-    return items
+def read_items(db: Session = Depends(get_db),api_key: str = Header(None)):
+    if api_key != api_key_secret:
+        return {"message": "Invalid API Key"}
+    else:
+        db.begin_nested()
+        # perform your database operations here
+    
+        db.expire_all()
+        items= {"items": get_data(db)}
+        db.commit()
+        return items
 
 
 
 @app.delete("/items/{item_id}")
-def delete_item(item_id: int,db: Session = Depends(get_db)):
-    #db = SessionLocal()
+def delete_item(item_id: int, db: Session = Depends(get_db),api_key: str = Header(None)):
     
-    db.begin_nested()
-    # perform your database operations here
-    # Delete the item from the data store
-    #db.delete(item_id)
-    #result =  db.execute(text("delete FROM items"))
-    db.commit()
-    delete_data(id1=item_id, db=db)
-    #items =  {"items": get_data()}
-    #db.close()
-    return {"message": "Item deleted"}
+    if api_key != api_key_secret:
+        return {"message": "Invalid API Key"}
+    else:
+        db.begin_nested()
+        # perform your database operations here
+        # Delete the item from the data store
+        #db.delete(item_id)
+        #result =  db.execute(text("delete FROM items"))
+        db.commit()
+        delete_data(id1=item_id, db=db)
+        #items =  {"items": get_data()}
+        #db.close()
+        return {"message": "Item deleted"}
 
 @app.get("/items/duplicate")
-def read_duplicate_items(item:str, db: Session = Depends(get_db)):
-    db.begin_nested()
-    # perform your database operations here
- 
-    db.expire_all()
-    items= {"items": get_duplicate_data(item, db)}
-    db.commit()
-    return items
+def read_duplicate_items(item:str, db: Session = Depends(get_db),api_key: str = Header(None)):
+    if api_key != api_key_secret:
+        return {"message": "Invalid API Key"}
+    else:
+        db.begin_nested()
+        # perform your database operations here
+    
+        db.expire_all()
+        items= {"items": get_duplicate_data(item, db)}
+        db.commit()
+        return items
 
 
 @app.put("/items/update")
-def update_item_data(item_id: int, item_data: str, db: Session = Depends(get_db)):
-    db.begin_nested()
-    # perform your database operations here
- 
-    db.expire_all()
-    update_data(id=item_id, name=item_data,db=db)
-    db.commit()
-    return {"message": "Item updated"}
+def update_item_data(item_id: int, user_first_name: str, 
+                     user_last_name: str, user_email: str, 
+                     user_gender: str, user_ip_address: str, 
+                     user_country_code: str, db: Session = Depends(get_db),api_key: str = Header(None)):
+    if api_key != api_key_secret:
+        return {"message": "Invalid API Key"}
+    else:
+        db.begin_nested()
+        # perform your database operations here
+    
+        db.expire_all()
+        update_data(id=item_id, first_name=user_first_name, last_name=user_last_name, 
+                    email=user_email, gender=user_gender, ip_address=user_ip_address, country_code=user_country_code,db=db)
+        db.commit()
+        return {"message": "Item updated"}
