@@ -3,7 +3,6 @@
 #from fastapi import FastAPI
 #from fastapi.responses import JSONResponse
 #from pydantic import BaseModel
-from sqlalchemy import create_engine
 #from sqlalchemy.orm import sessionmaker
 #
 ##app = FastAPI()
@@ -40,6 +39,7 @@ from sqlalchemy import create_engine, Column, Integer, String,text, Table, MetaD
 #from fastapi import HTTPException
 #from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 #from sqlalchemy.ext.declarative import declarative_base
 #from sqlalchemy import Column, Integer, String
 #
@@ -76,8 +76,8 @@ from sqlalchemy.orm import sessionmaker
 #    return items_list
 
 
-from fastapi import FastAPI
-from models import get_data, delete_data, get_duplicate_data, update_data
+from fastapi import FastAPI, Header,Depends
+from models import get_db, engine, get_data, delete_data, get_duplicate_data, update_data
 
 app = FastAPI()
 
@@ -94,8 +94,10 @@ app = FastAPI()
 #    #    raise HTTPException(status_code=404, detail="Item not found")
 #    return items
 #
-engine = create_engine('sqlite:///db.sqlite3', pool_size=5, max_overflow=0)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+#engine = create_engine('sqlite:///db.sqlite3', pool_size=5, max_overflow=0)
+#SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
 
 #@app.delete("/items/{item_id}")
 #def delete_data(id: int):
@@ -111,7 +113,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #    #session.close()
 
 
-db = SessionLocal()
+#db = SessionLocal()
 
 
 #def get_operation():
@@ -129,24 +131,27 @@ db = SessionLocal()
 #        db.close()
 #
 
+
 @app.get("/")
-def read_root():
+def read_root(api_key: str = Header(None)):
+    if api_key != "secret_key":
+        return {"message": "Invalid API Key"}
     return {"Hello": "World"}
 
 @app.get("/items")
-def read_items():
+def read_items(db: Session = Depends(get_db)):
     db.begin_nested()
     # perform your database operations here
  
     db.expire_all()
-    items= {"items": get_data()}
+    items= {"items": get_data(db)}
     db.commit()
     return items
 
 
 
 @app.delete("/items/{item_id}")
-def delete_item(item_id: int):
+def delete_item(item_id: int,db: Session = Depends(get_db)):
     #db = SessionLocal()
     
     db.begin_nested()
@@ -155,28 +160,28 @@ def delete_item(item_id: int):
     #db.delete(item_id)
     #result =  db.execute(text("delete FROM items"))
     db.commit()
-    delete_data(id1=item_id)
+    delete_data(id1=item_id, db=db)
     #items =  {"items": get_data()}
-    db.close()
+    #db.close()
     return {"message": "Item deleted"}
 
 @app.get("/items/duplicate")
-def read_duplicate_items():
+def read_duplicate_items(item:str, db: Session = Depends(get_db)):
     db.begin_nested()
     # perform your database operations here
  
     db.expire_all()
-    items= {"items": get_duplicate_data()}
+    items= {"items": get_duplicate_data(item, db)}
     db.commit()
     return items
 
 
 @app.put("/items/update")
-def update_item_data(item_id: int, item_data: str):
+def update_item_data(item_id: int, item_data: str, db: Session = Depends(get_db)):
     db.begin_nested()
     # perform your database operations here
  
     db.expire_all()
-    update_data(id=item_id, name=item_data)
+    update_data(id=item_id, name=item_data,db=db)
     db.commit()
     return {"message": "Item updated"}
