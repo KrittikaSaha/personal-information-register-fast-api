@@ -68,7 +68,7 @@ The API should be running at http://127.0.0.1:8000/docs
 
 The API has 4 functionalites and looks like:
 ![personal_information_API.png](images/personal_information_register.png)
-To test the functionalities, there are 2 ways of doing it:
+To test the functionalities, a couple of ways of doing it are using Swagger UI which is described below and second method is using curl commands via cli which are also available in the images corresponding to each functionality:
 ### Using Swagger UI
 
 FastAPI provides automatically generated documentation interfaces for our APIs, which we can interact with through a web interface. We can see that when we navigate to /docs .
