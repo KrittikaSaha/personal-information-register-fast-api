@@ -91,7 +91,7 @@ Changes visible in GET/items
 
 
 ## 3. Explanation of the code 
-The repo contains the Dockefile with all instructions to run teh application in a container. The app folder contains the code to create the app.
+The repo contains the Dockefile with all instructions to run the application in a container. The app folder contains the code to create the app.
 
 3.1 data_generator.py
 This file contains code to generate a json document with some records
