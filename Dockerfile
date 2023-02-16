@@ -5,10 +5,8 @@ ADD app/main.py /
 ADD app/models.py /
 ADD app/data_generator.py /
 
-RUN pip install sqlalchemy
-RUN pip install fastapi
-RUN pip install uvicorn
-RUN pip install joblib
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 COPY . .
 
 EXPOSE 8000
