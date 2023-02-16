@@ -15,7 +15,9 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI, Header,Depends
 from models import get_db, get_data, delete_data, get_duplicate_data, update_data
 
-app = FastAPI()
+app = FastAPI(title="Personal Information Register FastAPI Application",
+              description="FastAPI Application to store and update user personal data with Swagger and Sqlalchemy",
+              version="1.0.0",)
 
 #def get_operation():
 #    try:
@@ -37,7 +39,7 @@ from credentials import api_key_secret
 def read_root(api_key: str = Header(None)):
     if api_key != api_key_secret:
         return {"message": "Invalid API Key"}
-    return {"Hello": "World"}
+    return {"Hello": "Welcome to the personal register API"}
 
 @app.get("/items")
 def read_items(db: Session = Depends(get_db),api_key: str = Header(None)):
@@ -48,7 +50,7 @@ def read_items(db: Session = Depends(get_db),api_key: str = Header(None)):
         # perform your database operations here
     
         db.expire_all()
-        items= {"items": get_data(db)}
+        items= {"items": get_data(db=db)}
         db.commit()
         return items
 

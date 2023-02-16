@@ -32,8 +32,6 @@ def delete_data(id1, db):
     db.commit()
 
 def get_duplicate_data(email_id, db):
-    #s = text("select * from items a join ( select " + nm + " from items group by " + nm + " having count(*) > 1 ) b on a." + nm + " = b." + nm + "")
-
     s = text("select * from users a join ( select email from users group by email having count(*) > 1 ) b on a.email = b.email  where a.email = '"+ email_id +"'")
     result = db.execute(s)
     items = [{"id": row[0], "first_name": row[1], "last_name": row[2]} for row in result]

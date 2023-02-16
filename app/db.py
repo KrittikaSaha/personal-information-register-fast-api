@@ -33,7 +33,7 @@ def create_database():
             data = json.load(file)
     # Load the data into the database
     for record in data:
-        print(record["email"])
+        print(f"""Creating record for user {record["first_name"]} {record["last_name"]}""")
         cursor.execute("""
             INSERT INTO users (id, first_name, last_name, email, gender, ip_address, country_code)
             VALUES (?, ?, ?, ?, ?, ?, ?)
